@@ -1,0 +1,110 @@
+import pygame as pg
+from math import *
+import os
+import sys
+vec2 = pg.math.Vector2
+vec3 = pg.math.Vector3
+
+os.environ["SDL_VIDEO_CENTERED"] = "1"
+
+width = 600
+height = 600
+thickness = 2
+
+pg.init()
+screen = pg.display.set_mode((width, height))
+clock = pg.time.Clock()
+
+def p5map(n, start1, stop1, start2, stop2):
+    return ((float(n)-start1)/(stop1-start1))*(stop2-start2)+start2
+
+def sphere(radius, point, xrot, yrot, zrot, yoffset):
+    for i in xrange(point):
+        lon = p5map(i, 0, point, -pi, pi)
+        for j in xrange(point):
+            lat = p5map(j, 0, point, -pi/2, pi/2)
+            x = int(radius * sin(lon) * cos(lat))# + width/2
+            y = int(radius * sin(lon) * sin(lat))# + height/2 + yoffset
+            z = int(radius * cos(lon))
+            pos = vec3(x,y,z)
+            pos.rotate_x_ip(xrot)
+            pos.rotate_y_ip(yrot)
+            pos.rotate_z_ip(zrot)
+            x = int(pos.x)
+            y = int(pos.y)
+            z = int(pos.z)
+            alpha = int(p5map(z, -radius, radius, 0, 255))
+            x += width/2
+            y += height/2
+            screen.fill((alpha,alpha,alpha), ((x, y), (1, 1)))
+            
+def run():
+    running = True
+    W = False
+    A = False
+    S = False
+    D = False
+    space = False
+    point = 100
+    radius = 200
+    yoffset = 0
+    xangle = 0
+    yangle = 1
+    zangle = 0
+    rot = 2
+    while running:
+        clock.tick(0)
+        mouse_pos = vec2(pg.mouse.get_pos())
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    running = False
+                    pg.quit()
+                    sys.exit()
+                if event.key == pg.K_UP:
+                    yoffset += -50
+                if event.key == pg.K_DOWN:
+                    yoffset += 50
+                if event.key == pg.K_w:
+                    W = not W
+                    S = False
+                if event.key == pg.K_s:
+                    S = not S
+                    W = False
+                if event.key == pg.K_a:
+                    A = not A
+                    D = False
+                if event.key == pg.K_d:
+                    D = not D
+                    A = False
+                if event.key == pg.K_SPACE:
+                    space = not space
+                if event.key == pg.K_r:
+                    W = False
+                    A = False
+                    S = False
+                    D = False
+                    space = False
+                    xangle = 0
+                    yangle = 1
+                    zangle = 0
+        if W:
+            xangle = (xangle + rot) % 360
+        if S:
+            xangle = (xangle - rot) % 360
+        if A:
+            yangle = (yangle + rot) % 360
+        if D:
+            yangle = (yangle - rot) % 360
+        if space:
+            zangle = (zangle + rot) % 360
+        pg.display.set_caption("{:.2f}".format(clock.get_fps()))
+        screen.fill((255, 255, 255, 255))
+        sphere(radius, point, xangle, yangle, zangle, yoffset)
+        pg.display.flip()
+
+run()
